@@ -1,5 +1,5 @@
 #include <SoftwareSerial.h>
-SoftwareSerial gprsSerial(2,3);
+SoftwareSerial gprsSerial(7,8); //SIM900 Tx & Rx is connected to Arduino #7 & #8
  
 #include <String.h>
 
