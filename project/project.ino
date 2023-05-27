@@ -10,7 +10,7 @@
 
 
 SoftwareSerial gprsSerial(10,11); //SIM900 Tx & Rx is connected to Arduino #7 & #8
-SoftwareSerial MySerial(MYSerialRX , MYSerialTX);
+// SoftwareSerial MySerial(MYSerialRX , MYSerialTX);
 
 unsigned char test_command[8] =
     {0X01, 0X04, 0X00, 0X00,
@@ -36,7 +36,7 @@ void setup()
   // put your setup code here, to run once:
   Serial.begin(9600);
   gprsSerial.begin(9600);               // the GPRS baud rate   
-  MySerial.begin(4800);
+  // MySerial.begin(4800);
 
 
   //####################### Valves
@@ -57,17 +57,17 @@ void loop()
 {
   // enable writing to mx485
   digitalWrite(RS485_power,HIGH);
-  MySerial.write(test_command, 8);
+  // MySerial.write(test_command, 8);
   // enable reading from mx485
   digitalWrite(RS485_power,LOW);
  
   int i = 0;
-  while (MySerial.available() > 0 && i < 80)
-  {
-    test_response[i] = MySerial.read();
-    i++;
-    yield();
-  }
+  // while (MySerial.available() > 0 && i < 80)
+  // {
+  //   test_response[i] = MySerial.read();
+  //   i++;
+  //   yield();
+  // }
 
   moisture = CaculateValue((int)test_response[3], (int)test_response[4]);
   moisture_value = moisture * 0.1;
