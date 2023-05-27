@@ -9,7 +9,7 @@
 
 
 
-SoftwareSerial gprsSerial(2,3); //SIM900 Tx & Rx is connected to Arduino #7 & #8
+SoftwareSerial gprsSerial(10,11); //SIM900 Tx & Rx is connected to Arduino #7 & #8
 SoftwareSerial MySerial(MYSerialRX , MYSerialTX);
 
 unsigned char test_command[8] =
