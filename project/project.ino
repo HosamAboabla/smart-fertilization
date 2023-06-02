@@ -10,7 +10,7 @@
 
 
 SoftwareSerial gprsSerial(10,11); //SIM900 Tx & Rx is connected to Arduino #7 & #8
-// SoftwareSerial MySerial(MYSerialRX , MYSerialTX);
+SoftwareSerial MySerial(MYSerialRX , MYSerialTX);
 
 unsigned char test_command[8] =
     {0X01, 0X04, 0X00, 0X00,
@@ -35,19 +35,28 @@ void setup()
 {
   // put your setup code here, to run once:
   Serial.begin(9600);
+  MySerial.begin(4800);
+  
+  // ############################  GSM Initialization
   gprsSerial.begin(9600);               // the GPRS baud rate   
-  // MySerial.begin(4800);
+  delay(1000);  // Delay for module initialization
+
+  gprsSerial.println("AT+CIPSPRT=0");  // Disable echoing of received data
+  delay(500);  // Wait for command response
+  ShowSerialData();
+
+  gprsSerial.println("AT+CIPMUX=0");  // Set single-connection mode
+  delay(500);  // Wait for command response
+  ShowSerialData();
 
 
-  //####################### Valves
+  //####################### Valves Initialization
   pinMode(VAVLE1 , OUTPUT);
 
 
-
+  // ##################### NPK Initialization
   pinMode(RS485_power, OUTPUT);
-  
   delay(50);
-
   digitalWrite(RS485_power, HIGH);
   delay(1000);
 
@@ -55,19 +64,20 @@ void setup()
 
 void loop()
 {
-  // enable writing to mx485
-  digitalWrite(RS485_power,HIGH);
-  // MySerial.write(test_command, 8);
-  // enable reading from mx485
-  digitalWrite(RS485_power,LOW);
+  
+  MySerial.listen();  // Start listening to NPK
+  
+  digitalWrite(RS485_power,HIGH);   // enable writing to mx485
+  MySerial.write(test_command, 8);
+  digitalWrite(RS485_power,LOW);    // enable reading from mx485
  
   int i = 0;
-  // while (MySerial.available() > 0 && i < 80)
-  // {
-  //   test_response[i] = MySerial.read();
-  //   i++;
-  //   yield();
-  // }
+  while (MySerial.available() > 0 && i < 80)
+  {
+    test_response[i] = MySerial.read();
+    i++;
+    yield();
+  }
 
   moisture = CaculateValue((int)test_response[3], (int)test_response[4]);
   moisture_value = moisture * 0.1;
@@ -106,7 +116,7 @@ void loop()
 
   //####################### Valves
 
-  digitalWrite(VAVLE1, !digitalRead(VAVLE1));
+  digitalWrite(VAVLE1, !digitalRead(VAVLE1));   // Toggle Valve
 
 
 
@@ -114,56 +124,62 @@ void loop()
 
   //######################################################### GSM
 
-         
-
-   
+  gprsSerial.listen();    // Start listening to GSM
   if (gprsSerial.available())
     Serial.write(gprsSerial.read());
  
+
+  // checks the communication between the device and the GSM module
   gprsSerial.println("AT");
-  delay(1000);
+  delay(500);
  
+  // check the status of the SIM card PIN
   gprsSerial.println("AT+CPIN?");
-  delay(1000);
+  delay(500);
  
+  // check the registration status of the GSM module with the cellular network.
   gprsSerial.println("AT+CREG?");
-  delay(1000);
+  delay(500);
  
+  // check the attachment status of the GSM module to GPRS network.
   gprsSerial.println("AT+CGATT?");
-  delay(1000);
+  delay(500);
  
+
+
+  // terminates all existing connections and frees up resources associated with those connections.
   gprsSerial.println("AT+CIPSHUT");
-  delay(1000);
- 
+  delay(500);
+  
+  // provides information about the current connection mode, connection status, and other relevant details.
   gprsSerial.println("AT+CIPSTATUS");
   delay(2000);
- 
-  gprsSerial.println("AT+CIPMUX=0");
-  delay(2000);
- 
+  
+
   ShowSerialData();
  
-  gprsSerial.println("AT+CSTT=\"jawwalnet.com\"");//start task and setting the APN,
+  // configure the APN (Access Point Name) settings for establishing a GPRS connection on the GSM module.
+  gprsSerial.println("AT+CSTT=\"jawwalnet.com\"");
   delay(1000);
  
   ShowSerialData();
  
-  gprsSerial.println("AT+CIICR");//bring up wireless connection
+  // bring up the GPRS context and activate the IP connection on the GSM module.
+  gprsSerial.println("AT+CIICR");
   delay(3000);
  
   ShowSerialData();
  
-  gprsSerial.println("AT+CIFSR");//get local IP adress
+  // retrieve the IP address assigned to the GSM module 
+  gprsSerial.println("AT+CIFSR");
   delay(2000);
- 
-  ShowSerialData();
- 
-  gprsSerial.println("AT+CIPSPRT=0");
-  delay(3000);
  
   ShowSerialData();
   
-  gprsSerial.println("AT+CIPSTART=\"TCP\",\"api.thingspeak.com\",\"80\"");//start up the connection
+  
+  
+  // establish a TCP connection with the host "api.thingspeak.com" on port 80.
+  gprsSerial.println("AT+CIPSTART=\"TCP\",\"api.thingspeak.com\",\"80\"");
   delay(6000);
  
   ShowSerialData();
